@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#f5f7fb" />
+<title>ER SIGNAL — 응급의료 탐색</title>
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+:root{--bg:#f4f6fa;--surface:#fff;--ink:#182230;--muted:#748094;--line:#e8edf3;--blue:#2563eb;--blue2:#eaf1ff;--green:#0f9f75;--greenbg:#e8f7f1;--amber:#c47b16;--amberbg:#fff4df;--red:#d34e55;--redbg:#fff0f0;--navy:#101c35;--shadow:0 12px 36px rgba(23,39,67,.07)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:'DM Sans','Noto Sans KR',sans-serif;color:var(--ink);background:var(--bg)}button,input,select{font:inherit}button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-rows:72px 1fr}
+.topbar{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:1000}
+.brand{display:flex;align-items:center;gap:11px}.brand-mark{width:36px;height:36px;border-radius:12px;background:var(--blue);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:900;box-shadow:0 6px 14px #2563eb40}.brand-name{font-size:16px;font-weight:900;letter-spacing:1.5px}.brand-sub{font-size:10px;color:#8792a3;letter-spacing:1.4px;margin-top:2px}
+.top-right{display:flex;align-items:center;gap:12px}.demo-pill{font-size:11px;font-weight:800;color:#a06b12;background:#fff6e6;border:1px solid #f4e2bd;padding:7px 11px;border-radius:20px;letter-spacing:.3px}.top-date{font-size:12px;color:var(--muted);font-weight:600}
+.layout{display:grid;grid-template-columns:420px minmax(0,1fr);min-height:calc(100vh - 72px)}
+.left{background:#fff;border-right:1px solid var(--line);padding:26px 24px 32px;overflow-y:auto;max-height:calc(100vh - 72px)}
+.eyebrow{font-size:10px;color:var(--blue);font-weight:900;letter-spacing:1.6px;margin-bottom:9px}.heading{font-size:25px;font-weight:900;letter-spacing:-1.1px;line-height:1.25;margin:0}.subheading{font-size:12px;color:var(--muted);line-height:1.65;margin:9px 0 20px}
+.search-wrap{position:relative;margin-bottom:13px}.search-wrap svg{position:absolute;left:14px;top:14px;color:#8792a3}.search{width:100%;height:46px;border:1px solid #e1e7ef;background:#f8fafd;border-radius:12px;padding:0 14px 0 42px;outline:none;font-size:13px;transition:.2s}.search:focus{border-color:#8db0ff;box-shadow:0 0 0 3px #2563eb13;background:#fff}
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:17px}.chip{border:1px solid #e6ebf2;background:#fff;color:#677487;padding:8px 11px;border-radius:9px;font-size:11px;font-weight:700;transition:.18s}.chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}.chip:hover{border-color:#a9b8cd}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0 22px}.stat{background:#f7f9fc;border:1px solid #edf1f6;border-radius:12px;padding:12px 11px}.stat-label{font-size:10px;color:#8792a3;font-weight:700}.stat-value{font-size:22px;font-weight:900;letter-spacing:-.8px;margin-top:5px}.stat-foot{font-size:9px;color:#98a2b1;margin-top:2px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:20px 0 11px}.section-title{font-size:13px;font-weight:900}.result-count{font-size:10px;color:#8994a4;font-weight:700}.sort-select{border:1px solid var(--line);border-radius:8px;background:#fff;padding:7px 9px;color:#667386;font-size:10px;outline:none}
+.list{display:flex;flex-direction:column;gap:9px}.hospital{border:1px solid #e9edf3;border-radius:13px;padding:13px 13px 12px;transition:.2s;cursor:pointer;position:relative;background:#fff}.hospital:hover{border-color:#a9c3ff;box-shadow:0 7px 18px #1e3a8a0d;transform:translateY(-1px)}.hospital.selected{border:1.5px solid var(--blue);background:#f8faff;box-shadow:0 0 0 3px #2563eb0c}
+.h-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.h-name{font-size:13px;font-weight:900;letter-spacing:-.25px;line-height:1.4}.h-type{font-size:9px;color:#8a95a5;margin-top:4px}.status{font-size:9px;font-weight:900;padding:5px 7px;border-radius:6px;white-space:nowrap}.status.good{background:var(--greenbg);color:var(--green)}.status.mid{background:var(--amberbg);color:var(--amber)}.status.bad{background:var(--redbg);color:var(--red)}
+.h-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:12px}.h-meta{font-size:10px;color:#778396}.h-meta b{color:#344054;font-weight:800}.capacity{display:flex;align-items:center;gap:6px;font-size:10px;color:#647186;font-weight:700}.capacity-track{height:5px;width:62px;background:#edf1f5;border-radius:8px;overflow:hidden}.capacity-fill{height:100%;border-radius:8px}.empty{padding:30px 12px;text-align:center;color:#8a95a5;font-size:12px;border:1px dashed #dce3ec;border-radius:12px}
+.right{padding:22px 24px 24px;min-width:0;display:flex;flex-direction:column;gap:14px}.right-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.right-title{font-size:17px;font-weight:900;letter-spacing:-.5px}.right-caption{font-size:10px;color:#8792a3;margin-top:4px}.actions{display:flex;gap:8px}.btn{border:1px solid #e1e7ef;background:#fff;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:800;color:#445166;display:inline-flex;align-items:center;gap:7px;transition:.2s}.btn:hover{border-color:#9bb8ff;color:var(--blue)}.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 5px 12px #2563eb24}.btn.primary:hover{background:#1d4ed8}
+.map-shell{position:relative;flex:1;min-height:510px;background:#e9eef3;border:1px solid #e1e7ef;border-radius:17px;overflow:hidden;box-shadow:var(--shadow)}#map{height:100%;min-height:510px;width:100%;z-index:1}.map-legend{position:absolute;left:16px;bottom:16px;z-index:500;background:#fff;border:1px solid #e9edf3;border-radius:11px;padding:10px 12px;box-shadow:0 5px 18px #15233b18;display:flex;gap:13px;flex-wrap:wrap}.legend-item{display:flex;align-items:center;gap:6px;font-size:9px;color:#687588;font-weight:700}.dot{width:7px;height:7px;border-radius:50%}
+.map-note{position:absolute;right:14px;top:14px;z-index:500;background:#ffffffed;border:1px solid #e8edf3;padding:8px 11px;border-radius:9px;font-size:9px;color:#667386;font-weight:700;backdrop-filter:blur(8px)}
+.map-overlay{position:absolute;left:16px;top:16px;z-index:500;background:#fff;border:1px solid #e8edf3;border-radius:12px;padding:12px 14px;box-shadow:0 6px 20px #15233b12;max-width:245px}.overlay-kicker{font-size:9px;color:var(--blue);font-weight:900;letter-spacing:1px}.overlay-title{font-size:13px;font-weight:900;margin-top:4px}.overlay-desc{font-size:10px;color:#7b8797;margin-top:3px;line-height:1.5}
+.detail{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px 18px;box-shadow:0 5px 18px #172b4d06;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}.detail-kicker{font-size:9px;color:var(--blue);font-weight:900;letter-spacing:1.3px}.detail-name{font-size:16px;font-weight:900;margin-top:5px}.detail-address{font-size:10px;color:#8792a3;margin-top:5px}.detail-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{font-size:9px;font-weight:700;color:#627086;background:#f3f6fa;border-radius:6px;padding:5px 7px}.detail-side{display:flex;align-items:center;gap:18px}.travel{text-align:right}.travel strong{display:block;font-size:20px;font-weight:900;letter-spacing:-.8px}.travel span{font-size:9px;color:#8994a4}.detail-buttons{display:flex;gap:7px}
+.footer-note{font-size:9px;color:#9aa4b2;line-height:1.6;padding:0 3px}
+.leaflet-container{font-family:'DM Sans','Noto Sans KR',sans-serif}.leaflet-popup-content-wrapper{border-radius:11px;box-shadow:0 8px 24px #172b4d24}.leaflet-popup-content{margin:11px 13px;font-size:11px}.pin{width:30px;height:30px;border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 3px 10px #172b4d45;display:grid;place-items:center}.pin span{transform:rotate(45deg);font-size:12px;color:white;font-weight:900}.user-pin{width:17px;height:17px;border-radius:50%;background:#2563eb;border:4px solid #fff;box-shadow:0 0 0 7px #2563eb35,0 2px 8px #15233b55}
+.modal-backdrop{position:fixed;inset:0;background:#0d1728a6;z-index:2000;display:none;align-items:center;justify-content:center;padding:18px}.modal-backdrop.show{display:flex}.modal{width:min(520px,100%);background:#fff;border-radius:18px;padding:23px;box-shadow:0 20px 70px #0003;max-height:90vh;overflow:auto}.modal-head{display:flex;justify-content:space-between;align-items:flex-start}.modal-title{font-size:18px;font-weight:900}.close{border:0;background:#f1f4f8;border-radius:8px;width:30px;height:30px;font-size:17px;color:#617087}.modal-copy{font-size:11px;color:#788496;line-height:1.7;margin:12px 0 17px}.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.modal-stat{background:#f7f9fc;border:1px solid #edf1f6;border-radius:10px;padding:12px}.modal-stat small{display:block;color:#8994a4;font-size:9px}.modal-stat strong{display:block;font-size:16px;margin-top:5px}.modal-section{font-size:11px;font-weight:900;margin:17px 0 7px}.modal-list{font-size:10px;color:#647186;line-height:1.9}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#17243b;color:#fff;padding:11px 15px;border-radius:10px;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:3000;box-shadow:0 8px 25px #0d172844}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1050px){.layout{grid-template-columns:360px minmax(0,1fr)}.left{padding:22px 18px}.right{padding:18px}.detail-side{gap:10px}.detail-buttons{flex-direction:column}}
+@media(max-width:760px){.app{grid-template-rows:62px 1fr}.topbar{height:62px;padding:0 16px}.top-date{display:none}.layout{display:flex;flex-direction:column}.left{max-height:none;overflow:visible;border-right:0;border-bottom:1px solid var(--line);padding:22px 16px}.right{padding:16px;min-height:650px}.map-shell,#map{min-height:440px}.right-head{align-items:flex-start}.actions{flex-wrap:wrap;justify-content:flex-end}.detail{grid-template-columns:1fr}.detail-side{justify-content:space-between}.detail-buttons{flex-direction:row}.heading{font-size:23px}.stats{margin:15px 0 18px}.map-overlay{max-width:190px}.map-note{font-size:8px}}
+@media(max-width:420px){.brand-name{font-size:14px}.demo-pill{font-size:9px;padding:6px 8px}.right-title{font-size:15px}.btn{padding:8px 9px;font-size:10px}.map-overlay{max-width:165px;padding:9px 10px}.overlay-desc{font-size:9px}.detail-buttons .btn{font-size:9px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">+</div><div><div class="brand-name">ER SIGNAL</div><div class="brand-sub">EMERGENCY CARE FINDER</div></div></div>
+    <div class="top-right"><span class="top-date" id="today"></span><span class="demo-pill">SIMULATION MODE · DEMO DATA</span></div>
+  </header>
+  <main class="layout">
+    <aside class="left">
+      <div class="eyebrow">SEOUL EMERGENCY NETWORK</div>
+      <h1 class="heading">가까운 응급실,<br>한눈에 확인하세요.</h1>
+      <p class="subheading">주변 응급의료기관의 위치와 가상 수용 현황을 비교하고, 이동 정보를 확인할 수 있습니다.</p>
+      <div class="search-wrap">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input class="search" id="search" placeholder="병원명 또는 지역 검색" autocomplete="off">
+      </div>
+      <div class="filter-row" id="filters">
+        <button class="chip active" data-filter="all">전체 병원</button>
+        <button class="chip" data-filter="available">이용 가능</button>
+        <button class="chip" data-filter="limited">여유 적음</button>
+        <button class="chip" data-filter="busy">혼잡</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">검색 병원</div><div class="stat-value" id="statTotal">24</div><div class="stat-foot">SIMULATED</div></div>
+        <div class="stat"><div class="stat-label">이용 가능</div><div class="stat-value" id="statAvailable">—</div><div class="stat-foot">가상 운영 상태</div></div>
+        <div class="stat"><div class="stat-label">평균 여유도</div><div class="stat-value" id="statCapacity">—</div><div class="stat-foot">예시 지표</div></div>
+      </div>
+      <div class="section-head"><span class="section-title">응급의료기관</span><select class="sort-select" id="sort"><option value="distance">거리 가까운 순</option><option value="capacity">여유도 높은 순</option><option value="name">이름순</option></select></div>
+      <div class="list" id="hospitalList"></div>
+    </aside>
+    <section class="right">
+      <div class="right-head">
+        <div><div class="right-title">응급의료 지도</div><div class="right-caption">서울 주요 권역 · 예시 위치 데이터</div></div>
+        <div class="actions"><button class="btn" id="locateBtn">◎ 내 위치 찾기</button><button class="btn primary" id="nearestBtn">가까운 병원 추천 ↗</button></div>
+      </div>
+      <div class="map-shell">
+        <div id="map"></div>
+        <div class="map-overlay"><div class="overlay-kicker">LIVE MAP PREVIEW</div><div class="overlay-title">서울 응급의료 네트워크</div><div class="overlay-desc">마커를 선택하면 병원별 상세 정보와 이동 추정치를 확인할 수 있습니다.</div></div>
+        <div class="map-note">지도 타일: © OpenStreetMap contributors</div>
+        <div class="map-legend">
+          <span class="legend-item"><i class="dot" style="background:#0f9f75"></i>이용 가능</span>
+          <span class="legend-item"><i class="dot" style="background:#d69a35"></i>여유 적음</span>
+          <span class="legend-item"><i class="dot" style="background:#d34e55"></i>혼잡</span>
+          <span class="legend-item"><i class="dot" style="background:#2563eb"></i>내 위치</span>
+        </div>
+      </div>
+      <div class="detail" id="detailPanel">
+        <div><div class="detail-kicker">SELECTED HOSPITAL</div><div class="detail-name" id="detailName">병원을 선택해 주세요</div><div class="detail-address" id="detailAddress">지도 마커 또는 왼쪽 병원 목록을 선택하면 상세 정보가 표시됩니다.</div><div class="detail-tags" id="detailTags"><span class="tag">응급실 정보</span><span class="tag">이동 거리</span></div></div>
+        <div class="detail-side"><div class="travel"><strong id="detailTravel">—</strong><span id="detailDistance">위치 선택 대기 중</span></div><div class="detail-buttons"><button class="btn" id="infoBtn">상세 정보</button><button class="btn primary" id="routeBtn">경로 표시 ↗</button></div></div>
+      </div>
+      <div class="footer-note">※ 본 웹사이트는 UI·기능 시연을 위한 모의 서비스입니다. 병원명·위치·수용 현황·거리·이동 시간은 실제 응급의료 데이터가 아닙니다. 응급 상황에서는 119에 연락하고 안내에 따르세요. 지도는 인터넷 연결이 필요합니다.</div>
+    </section>
+  </main>
+</div>
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div class="modal-title" id="modalTitle">병원 상세 정보</div><button class="close" id="closeModal" aria-label="닫기">×</button></div><div id="modalBody"></div></div></div>
+<div class="toast" id="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const hospitals = [
+ {id:1,name:"서울중앙 응급의료센터",district:"중구",type:"권역응급의료센터",lat:37.5672,lng:126.991,capacity:82,available:true,departments:["응급의학과","내과","외과","소아청소년과"],beds:18,phone:"02-0000-1001",address:"서울특별시 중구 세종대로 00",note:"도심권 종합 응급의료기관"},
+ {id:2,name:"한강 메디컬센터",district:"용산구",type:"지역응급의료센터",lat:37.5326,lng:126.990,capacity:67,available:true,departments:["응급의학과","내과","정형외과"],beds:12,phone:"02-0000-1002",address:"서울특별시 용산구 한강대로 00",note:"용산 권역 가상 의료기관"},
+ {id:3,name:"서대문 종합병원",district:"서대문구",type:"지역응급의료기관",lat:37.5791,lng:126.9368,capacity:43,available:true,departments:["응급의학과","내과","외과"],beds:8,phone:"02-0000-1003",address:"서울특별시 서대문구 통일로 00",note:"서북권 가상 의료기관"},
+ {id:4,name:"마포 새빛병원",district:"마포구",type:"지역응급의료기관",lat:37.5563,lng:126.910,capacity:25,available:false,departments:["응급의학과","내과"],beds:4,phone:"02-0000-1004",address:"서울특별시 마포구 월드컵로 00",note:"마포 권역 가상 의료기관"},
+ {id:5,name:"은평 미래의료원",district:"은평구",type:"지역응급의료기관",lat:37.6027,lng:126.9291,capacity:76,available:true,departments:["응급의학과","내과","외과","정형외과"],beds:15,phone:"02-0000-1005",address:"서울특별시 은평구 통일로 00",note:"은평 권역 가상 의료기관"},
+ {id:6,name:"종로 세움병원",district:"종로구",type:"지역응급의료센터",lat:37.5729,lng:126.9794,capacity:54,available:true,departments:["응급의학과","내과","신경과"],beds:10,phone:"02-0000-1006",address:"서울특별시 종로구 종로 00",note:"종로 권역 가상 의료기관"},
+ {id:7,name:"성북 한결병원",district:"성북구",type:"지역응급의료기관",lat:37.5894,lng:127.0167,capacity:31,available:false,departments:["응급의학과","내과"],beds:5,phone:"02-0000-1007",address:"서울특별시 성북구 고려대로 00",note:"성북 권역 가상 의료기관"},
+ {id:8,name:"동대문 메디플러스",district:"동대문구",type:"지역응급의료센터",lat:37.5744,lng:127.0396,capacity:88,available:true,departments:["응급의학과","내과","외과","소아청소년과"],beds:20,phone:"02-0000-1008",address:"서울특별시 동대문구 왕산로 00",note:"동북권 가상 의료기관"},
+ {id:9,name:"중랑 늘편한병원",district:"중랑구",type:"지역응급의료기관",lat:37.6063,lng:127.0927,capacity:59,available:true,departments:["응급의학과","내과","정형외과"],beds:11,phone:"02-0000-1009",address:"서울특별시 중랑구 망우로 00",note:"중랑 권역 가상 의료기관"},
+ {id:10,name:"성동 다온의료원",district:"성동구",type:"지역응급의료기관",lat:37.5635,lng:127.0368,capacity:18,available:false,departments:["응급의학과","내과"],beds:3,phone:"02-0000-1010",address:"서울특별시 성동구 왕십리로 00",note:"성동 권역 가상 의료기관"},
+ {id:11,name:"광진 온누리병원",district:"광진구",type:"지역응급의료기관",lat:37.5385,lng:127.0823,capacity:72,available:true,departments:["응급의학과","내과","외과"],beds:14,phone:"02-0000-1011",address:"서울특별시 광진구 능동로 00",note:"광진 권역 가상 의료기관"},
+ {id:12,name:"강동 열린의료센터",district:"강동구",type:"지역응급의료센터",lat:37.5301,lng:127.1238,capacity:49,available:true,departments:["응급의학과","내과","외과"],beds:9,phone:"02-0000-1012",address:"서울특별시 강동구 천호대로 00",note:"강동 권역 가상 의료기관"},
+ {id:13,name:"송파 바른병원",district:"송파구",type:"지역응급의료기관",lat:37.5048,lng:127.1148,capacity:91,available:true,departments:["응급의학과","내과","외과","소아청소년과"],beds:22,phone:"02-0000-1013",address:"서울특별시 송파구 올림픽로 00",note:"송파 권역 가상 의료기관"},
+ {id:14,name:"강남 이룸의료원",district:"강남구",type:"지역응급의료센터",lat:37.5172,lng:127.0473,capacity:63,available:true,departments:["응급의학과","내과","정형외과"],beds:13,phone:"02-0000-1014",address:"서울특별시 강남구 테헤란로 00",note:"강남 권역 가상 의료기관"},
+ {id:15,name:"서초 다솜병원",district:"서초구",type:"지역응급의료기관",lat:37.4837,lng:127.0324,capacity:37,available:false,departments:["응급의학과","내과"],beds:6,phone:"02-0000-1015",address:"서울특별시 서초구 서초대로 00",note:"서초 권역 가상 의료기관"},
+ {id:16,name:"관악 새봄의료센터",district:"관악구",type:"지역응급의료기관",lat:37.4784,lng:126.9516,capacity:80,available:true,departments:["응급의학과","내과","외과"],beds:16,phone:"02-0000-1016",address:"서울특별시 관악구 남부순환로 00",note:"관악 권역 가상 의료기관"},
+ {id:17,name:"동작 한마음병원",district:"동작구",type:"지역응급의료기관",lat:37.5124,lng:126.9393,capacity:56,available:true,departments:["응급의학과","내과","신경과"],beds:10,phone:"02-0000-1017",address:"서울특별시 동작구 상도로 00",note:"동작 권역 가상 의료기관"},
+ {id:18,name:"영등포 스마트병원",district:"영등포구",type:"지역응급의료센터",lat:37.5264,lng:126.8963,capacity:28,available:false,departments:["응급의학과","내과"],beds:4,phone:"02-0000-1018",address:"서울특별시 영등포구 영등포로 00",note:"영등포 권역 가상 의료기관"},
+ {id:19,name:"구로 온정병원",district:"구로구",type:"지역응급의료기관",lat:37.4954,lng:126.8874,capacity:69,available:true,departments:["응급의학과","내과","외과"],beds:13,phone:"02-0000-1019",address:"서울특별시 구로구 경인로 00",note:"구로 권역 가상 의료기관"},
+ {id:20,name:"금천 푸른의료원",district:"금천구",type:"지역응급의료기관",lat:37.4569,lng:126.8955,capacity:46,available:true,departments:["응급의학과","내과"],beds:8,phone:"02-0000-1020",address:"서울특별시 금천구 시흥대로 00",note:"금천 권역 가상 의료기관"},
+ {id:21,name:"양천 중앙병원",district:"양천구",type:"지역응급의료센터",lat:37.5169,lng:126.8664,capacity:84,available:true,departments:["응급의학과","내과","외과","소아청소년과"],beds:19,phone:"02-0000-1021",address:"서울특별시 양천구 목동서로 00",note:"양천 권역 가상 의료기관"},
+ {id:22,name:"강서 이로운병원",district:"강서구",type:"지역응급의료기관",lat:37.5509,lng:126.8495,capacity:61,available:true,departments:["응급의학과","내과","정형외과"],beds:12,phone:"02-0000-1022",address:"서울특별시 강서구 공항대로 00",note:"강서 권역 가상 의료기관"},
+ {id:23,name:"도봉 다정의료원",district:"도봉구",type:"지역응급의료기관",lat:37.6688,lng:127.0471,capacity:34,available:false,departments:["응급의학과","내과"],beds:5,phone:"02-0000-1023",address:"서울특별시 도봉구 도봉로 00",note:"도봉 권역 가상 의료기관"},
+ {id:24,name:"노원 북부메디컬",district:"노원구",type:"지역응급의료센터",lat:37.6542,lng:127.0568,capacity:77,available:true,departments:["응급의학과","내과","외과"],beds:16,phone:"02-0000-1024",address:"서울특별시 노원구 동일로 00",note:"노원 권역 가상 의료기관"}
+];
+const $=id=>document.getElementById(id);
+const statusOf=h=>h.capacity>=60&&h.available?"good":h.capacity>=35&&h.available?"mid":"bad";
+const statusText=h=>statusOf(h)==="good"?"이용 가능":statusOf(h)==="mid"?"여유 적음":"혼잡";
+const colorOf=h=>statusOf(h)==="good"?"#0f9f75":statusOf(h)==="mid"?"#d69a35":"#d34e55";
+let userLocation={lat:37.5665,lng:126.9780,label:"서울시청 기준 위치"};
+let selectedId=null,activeFilter="all",routeLayer=null,userMarker=null,markers={},map;
+function distanceKm(a,b){const R=6371,rad=x=>x*Math.PI/180,dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng),x=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function fmtDistance(n){return n<1?`${Math.round(n*1000)}m`:`${n.toFixed(1)}km`}
+function eta(h){const km=distanceKm(userLocation,h);return Math.max(3,Math.round(km/22*60+5))}
+function getVisible(){let q=$("search").value.trim().toLowerCase();let arr=hospitals.filter(h=>{let ok=activeFilter==="all"||(activeFilter==="available"&&statusOf(h)==="good")||(activeFilter==="limited"&&statusOf(h)==="mid")||(activeFilter==="busy"&&statusOf(h)==="bad");let text=[h.name,h.district,h.type].join(" ").toLowerCase().includes(q);return ok&&text});let s=$("sort").value;arr.sort((a,b)=>s==="distance"?distanceKm(userLocation,a)-distanceKm(userLocation,b):s==="capacity"?b.capacity-a.capacity:s==="name"?a.name.localeCompare(b.name,"ko"):0);return arr}
+function renderStats(){let visible=getVisible();$("statTotal").textContent=visible.length;$("statAvailable").textContent=visible.filter(h=>statusOf(h)==="good").length;let avg=visible.length?Math.round(visible.reduce((s,h)=>s+h.capacity,0)/visible.length):0;$("statCapacity").textContent=visible.length?avg+"%":"—"}
+function renderList(){let arr=getVisible();$("hospitalList").innerHTML=arr.length?arr.map(h=>{let selected=h.id===selectedId;return `<article class="hospital ${selected?"selected":""}" data-id="${h.id}"><div class="h-top"><div><div class="h-name">${h.name}</div><div class="h-type">${h.district} · ${h.type}</div></div><span class="status ${statusOf(h)}">${statusText(h)}</span></div><div class="h-bottom"><span class="h-meta">현재 위치에서 <b>${fmtDistance(distanceKm(userLocation,h))}</b></span><span class="capacity"><span>여유도 ${h.capacity}%</span><span class="capacity-track"><span class="capacity-fill" style="display:block;width:${h.capacity}%;background:${colorOf(h)}"></span></span></span></div></article>`}).join(""):`<div class="empty">검색 결과가 없습니다.<br>다른 병원명이나 지역을 입력해 보세요.</div>`;document.querySelectorAll(".hospital").forEach(el=>el.addEventListener("click",()=>selectHospital(+el.dataset.id,true)));renderStats()}
+function iconFor(h){return L.divIcon({className:"",html:`<div class="pin" style="background:${colorOf(h)}"><span>+</span></div>`,iconSize:[30,36],iconAnchor:[15,34],popupAnchor:[0,-32]})}
+function initMap(){map=L.map("map",{zoomControl:false}).setView([37.5665,126.978],11);L.control.zoom({position:"bottomright"}).addTo(map);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'}).addTo(map);hospitals.forEach(h=>{let m=L.marker([h.lat,h.lng],{icon:iconFor(h)}).addTo(map);m.bindPopup(`<b>${h.name}</b><br><span style="color:${colorOf(h)};font-weight:700">${statusText(h)}</span><br>가상 여유도 ${h.capacity}%`);m.on("click",()=>selectHospital(h.id,false));markers[h.id]=m});setUserMarker();renderList()}
+function setUserMarker(){if(userMarker)map.removeLayer(userMarker);userMarker=L.marker([userLocation.lat,userLocation.lng],{icon:L.divIcon({className:"",html:'<div class="user-pin"></div>',iconSize:[17,17],iconAnchor:[8,8]})}).addTo(map).bindPopup(`<b>내 위치(시뮬레이션)</b><br>${userLocation.label}`)}
+function selectHospital(id,pan){let h=hospitals.find(x=>x.id===id);if(!h)return;selectedId=id;renderList();$("detailName").textContent=h.name;$("detailAddress").textContent=`${h.address} · ${h.district}`;$("detailTravel").textContent=`약 ${eta(h)}분`;$("detailDistance").textContent=`직선거리 ${fmtDistance(distanceKm(userLocation,h))} · 참고용 추정`;$("detailTags").innerHTML=`<span class="tag">${h.type}</span><span class="tag">가상 여유도 ${h.capacity}%</span><span class="tag">${h.beds}개 예시 병상</span>`;if(pan){map.setView([h.lat,h.lng],13,{animate:true});markers[id].openPopup()}if(routeLayer){map.removeLayer(routeLayer);routeLayer=null}}
+function showRoute(){if(!selectedId){toast("먼저 병원을 선택해 주세요.");return}let h=hospitals.find(x=>x.id===selectedId);if(routeLayer)map.removeLayer(routeLayer);routeLayer=L.polyline([[userLocation.lat,userLocation.lng],[h.lat,h.lng]],{color:"#2563eb",weight:5,opacity:.85,dashArray:"9 9"}).addTo(map);map.fitBounds(routeLayer.getBounds().pad(.25));toast("직선 연결 경로를 표시했습니다. 실제 도로 경로가 아닙니다.")}
+function nearest(){let candidates=hospitals.filter(h=>statusOf(h)==="good");if(!candidates.length)candidates=hospitals.filter(h=>h.available);if(!candidates.length){toast("추천할 수 있는 가상 병원이 없습니다.");return}candidates.sort((a,b)=>distanceKm(userLocation,a)-distanceKm(userLocation,b));selectHospital(candidates[0].id,true);showRoute()}
+function locate(){if(!navigator.geolocation){toast("이 브라우저에서는 위치 기능을 지원하지 않습니다.");return}toast("위치 권한을 확인하고 있습니다.");navigator.geolocation.getCurrentPosition(pos=>{userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude,label:"기기 위치 권한으로 확인"};setUserMarker();map.setView([userLocation.lat,userLocation.lng],13);renderList();if(selectedId)selectHospital(selectedId,false);toast("현재 위치를 지도에 반영했습니다.")},err=>{toast(err.code===1?"위치 권한이 거부되었습니다.":"위치를 확인하지 못했습니다. 기본 위치를 사용합니다.")},{enableHighAccuracy:true,timeout:9000,maximumAge:60000})}
+function showModal(){let h=hospitals.find(x=>x.id===selectedId);if(!h){toast("먼저 병원을 선택해 주세요.");return} $("modalTitle").textContent=h.name;$("modalBody").innerHTML=`<p class="modal-copy">${h.note}. 아래 정보는 화면 시연을 위해 임의로 생성한 데이터이며 실제 병원 정보가 아닙니다.</p><div class="modal-grid"><div class="modal-stat"><small>가상 운영 상태</small><strong style="color:${colorOf(h)}">${statusText(h)}</strong></div><div class="modal-stat"><small>가상 수용 여유도</small><strong>${h.capacity}%</strong></div><div class="modal-stat"><small>예시 병상 수</small><strong>${h.beds}개</strong></div><div class="modal-stat"><small>현재 위치 기준</small><strong>${fmtDistance(distanceKm(userLocation,h))}</strong></div></div><div class="modal-section">기관 정보</div><div class="modal-list">주소: ${h.address}<br>대표 전화(예시): ${h.phone}<br>기관 유형: ${h.type}<br>예상 이동 시간: 약 ${eta(h)}분 (직선거리 기반 단순 추정)</div><div class="modal-section">표시 진료과목 (예시)</div><div class="modal-list">${h.departments.join(" · ")}</div><p class="modal-copy" style="margin-bottom:0">실제 진료 가능 여부, 병상 상황, 진료과 운영 여부는 반드시 해당 의료기관 또는 119를 통해 확인해야 합니다.</p>`;$("modalBackdrop").classList.add("show")}
+function toast(msg){let t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),2600)}
+$("search").addEventListener("input",renderList);$("sort").addEventListener("change",renderList);document.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");activeFilter=b.dataset.filter;renderList()}));$("nearestBtn").addEventListener("click",nearest);$("locateBtn").addEventListener("click",locate);$("routeBtn").addEventListener("click",showRoute);$("infoBtn").addEventListener("click",showModal);$("closeModal").addEventListener("click",()=>$("modalBackdrop").classList.remove("show"));$("modalBackdrop").addEventListener("click",e=>{if(e.target===$("modalBackdrop"))$("modalBackdrop").classList.remove("show")});document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modalBackdrop").classList.remove("show")});
+$("today").textContent=new Intl.DateTimeFormat("ko-KR",{dateStyle:"full"}).format(new Date());
+initMap();
+</script>
+</body>
+</html>
