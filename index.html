@@ -36,6 +36,14 @@
 @media(max-width:1050px){.layout{grid-template-columns:360px minmax(0,1fr)}.left{padding:22px 18px}.right{padding:18px}.detail-side{gap:10px}.detail-buttons{flex-direction:column}}
 @media(max-width:760px){.app{grid-template-rows:62px 1fr}.topbar{height:62px;padding:0 16px}.top-date{display:none}.layout{display:flex;flex-direction:column}.left{max-height:none;overflow:visible;border-right:0;border-bottom:1px solid var(--line);padding:22px 16px}.right{padding:16px;min-height:650px}.map-shell,#map{min-height:440px}.right-head{align-items:flex-start}.actions{flex-wrap:wrap;justify-content:flex-end}.detail{grid-template-columns:1fr}.detail-side{justify-content:space-between}.detail-buttons{flex-direction:row}.heading{font-size:23px}.stats{margin:15px 0 18px}.map-overlay{max-width:190px}.map-note{font-size:8px}}
 @media(max-width:420px){.brand-name{font-size:14px}.demo-pill{font-size:9px;padding:6px 8px}.right-title{font-size:15px}.btn{padding:8px 9px;font-size:10px}.map-overlay{max-width:165px;padding:9px 10px}.overlay-desc{font-size:9px}.detail-buttons .btn{font-size:9px}}
+
+/* ER pre-arrival intake */
+.intake-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(120deg,#10213f,#1e3a68);color:#fff;border-radius:15px;padding:17px 19px;box-shadow:0 8px 22px #14294a1c}
+.intake-banner-copy{min-width:0}.intake-banner-kicker{font-size:9px;letter-spacing:1.4px;font-weight:900;color:#a9c7ff}.intake-banner-title{font-size:15px;font-weight:900;margin-top:5px}.intake-banner-desc{font-size:10px;color:#d2dced;line-height:1.6;margin-top:5px}
+.btn.light{background:#fff;color:#18345e;border-color:#fff;white-space:nowrap}
+.intake-modal{width:min(700px,100%)}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:10px;font-weight:800;color:#536176}.field input,.field select,.field textarea{width:100%;border:1px solid #dfe6ef;border-radius:9px;padding:10px 11px;font-size:12px;outline:none;background:#fff;color:#263449}.field textarea{min-height:74px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:#8db0ff;box-shadow:0 0 0 3px #2563eb13}.form-section{font-size:12px;font-weight:900;margin:18px 0 10px;padding-bottom:8px;border-bottom:1px solid #edf1f6}.consent{display:flex;align-items:flex-start;gap:8px;background:#f7f9fc;padding:11px;border-radius:9px;margin-top:14px;font-size:10px;line-height:1.6;color:#58667a}.consent input{margin-top:2px}.notice{font-size:10px;line-height:1.65;color:#8b5c17;background:#fff7e8;border:1px solid #f2e2bf;padding:10px 12px;border-radius:9px;margin:12px 0}.intake-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}.receiver-card{border:1px solid #e5ebf2;border-radius:11px;padding:12px;margin-top:10px}.receiver-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.receiver-name{font-size:12px;font-weight:900}.receiver-meta{font-size:10px;color:#8390a2;margin-top:4px}.receiver-body{font-size:10px;color:#56657a;line-height:1.7;margin-top:9px;white-space:pre-wrap}.mini-status{font-size:9px;font-weight:900;padding:5px 7px;border-radius:6px;background:#fff4df;color:#a36b13}.mini-status.received{background:#e8f7f1;color:#0f9f75}
+@media(max-width:560px){.intake-banner{align-items:flex-start;flex-direction:column}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.intake-actions{flex-direction:column-reverse}.intake-actions .btn{justify-content:center}}
+
 </style>
 </head>
 <body>
@@ -70,8 +78,18 @@
     <section class="right">
       <div class="right-head">
         <div><div class="right-title">응급의료 지도</div><div class="right-caption">서울 주요 권역 · 내장형 모의 지도</div></div>
-        <div class="actions"><button class="btn" id="locateBtn">◎ 내 위치 찾기</button><button class="btn primary" id="nearestBtn">가까운 병원 추천 ↗</button></div>
+        <div class="actions"><button class="btn" id="locateBtn">◎ 내 위치 찾기</button><button class="btn primary" id="nearestBtn">가까운 병원 추천 ↗</button><button class="btn" id="receiverBtn">병원 수신 화면</button></div>
       </div>
+
+      <div class="intake-banner">
+        <div class="intake-banner-copy">
+          <div class="intake-banner-kicker">PRE-ARRIVAL PATIENT INFORMATION</div>
+          <div class="intake-banner-title">응급실 도착 전, 건강정보를 미리 작성하세요.</div>
+          <div class="intake-banner-desc">현재 증상과 과거 병력 등을 정리해 선택한 병원에 전달하는 절차를 시연합니다.</div>
+        </div>
+        <button class="btn light" id="openIntakeBtn">사전 문진 시작 ↗</button>
+      </div>
+
       <div class="map-shell">
         <svg id="map" class="schematic-map" viewBox="0 0 900 620" role="img" aria-label="서울 주요 권역과 가상 병원 위치를 나타낸 모의 지도"></svg>
         <div class="map-overlay"><div class="overlay-kicker">OFFLINE MAP PREVIEW</div><div class="overlay-title">서울 응급의료 네트워크</div><div class="overlay-desc">권역별 점을 선택하면 병원 상세 정보와 이동 추정치를 확인할 수 있습니다.</div></div>
@@ -87,11 +105,55 @@
         <div><div class="detail-kicker">SELECTED HOSPITAL</div><div class="detail-name" id="detailName">병원을 선택해 주세요</div><div class="detail-address" id="detailAddress">지도 마커 또는 왼쪽 병원 목록을 선택하면 상세 정보가 표시됩니다.</div><div class="detail-tags" id="detailTags"><span class="tag">응급실 정보</span><span class="tag">이동 거리</span></div></div>
         <div class="detail-side"><div class="travel"><strong id="detailTravel">—</strong><span id="detailDistance">위치 선택 대기 중</span></div><div class="detail-buttons"><button class="btn" id="infoBtn">상세 정보</button><button class="btn primary" id="routeBtn">경로 표시 ↗</button></div></div>
       </div>
-      <div class="footer-note">※ 본 웹사이트는 UI·기능 시연을 위한 모의 서비스입니다. 병원명·위치·수용 현황·거리·이동 시간은 실제 응급의료 데이터가 아닙니다. 응급 상황에서는 119에 연락하고 안내에 따르세요. 지도 배경은 내장된 모의 도식도로 인터넷 연결이나 외부 지도 서비스가 필요하지 않습니다.</div>
+      <div class="footer-note">※ 본 웹사이트는 UI·기능 시연을 위한 모의 서비스입니다. 사전 문진 정보는 같은 브라우저의 로컬 저장 공간에 모의 저장되며 실제 병원으로 전송되지 않습니다. 병원명·위치·수용 현황·거리·이동 시간은 실제 응급의료 데이터가 아닙니다. 응급 상황에서는 119에 연락하고 안내에 따르세요. 지도 배경은 내장된 모의 도식도로 인터넷 연결이나 외부 지도 서비스가 필요하지 않습니다.</div>
     </section>
   </main>
 </div>
 <div class="modal-backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><div class="modal-title" id="modalTitle">병원 상세 정보</div><button class="close" id="closeModal" aria-label="닫기">×</button></div><div id="modalBody"></div></div></div>
+
+<div class="modal-backdrop" id="intakeBackdrop">
+  <div class="modal intake-modal" role="dialog" aria-modal="true" aria-labelledby="intakeTitle">
+    <div class="modal-head"><div><div class="modal-title" id="intakeTitle">응급실 사전 문진</div><div class="right-caption">PRE-ARRIVAL INTAKE</div></div><button class="close" id="closeIntake" aria-label="닫기">×</button></div>
+    <p class="modal-copy">응급실 도착 전에 현재 상태와 건강정보를 정리합니다. <b>별표(*)가 있는 병원·이름·생년월일·주요 증상 입력과 동의 체크</b>를 완료해야 다음 화면으로 이동합니다. 실제 병원 전송은 지원하지 않는 모의 시연입니다.</p>
+    <div class="notice">응급상황에서는 이 양식을 작성하느라 119 신고나 진료를 늦추지 마세요. 의식 저하, 심한 호흡곤란, 심한 흉통 등 위급한 증상이 있으면 즉시 119에 연락하세요.</div>
+    <form id="intakeForm">
+      <div class="form-section">01 · 방문 병원 및 기본 정보</div>
+      <div class="form-grid">
+        <div class="field full"><label for="intakeHospital">정보를 전달할 병원 *</label><select id="intakeHospital" required></select></div>
+        <div class="field"><label for="patientName">환자 이름 *</label><input id="patientName" maxlength="40" autocomplete="name" required placeholder="이름"></div>
+        <div class="field"><label for="patientBirth">생년월일 *</label><input id="patientBirth" type="date" required></div>
+        <div class="field"><label for="patientPhone">연락 가능한 전화번호</label><input id="patientPhone" type="tel" maxlength="20" autocomplete="tel" placeholder="010-0000-0000"></div>
+        <div class="field"><label for="arrivalTime">예상 도착 시간</label><select id="arrivalTime"><option value="미정">아직 미정</option><option>15분 이내</option><option>30분 이내</option><option>1시간 이내</option><option>1시간 이후</option></select></div>
+      </div>
+      <div class="form-section">02 · 현재 증상</div>
+      <div class="form-grid">
+        <div class="field"><label for="mainSymptom">가장 불편한 증상 *</label><input id="mainSymptom" maxlength="80" required placeholder="예: 복통, 어지럼증"></div>
+        <div class="field"><label for="symptomStart">증상 발생 시점</label><input id="symptomStart" placeholder="예: 오늘 오전 9시경"></div>
+        <div class="field"><label for="painLevel">불편감 또는 통증 정도</label><select id="painLevel"><option value="선택 안 함">선택 안 함</option><option>경미함</option><option>보통</option><option>심함</option><option>매우 심함</option><option>통증 없음</option></select></div>
+        <div class="field"><label for="symptomChange">증상 변화</label><select id="symptomChange"><option>변화 없음</option><option>점점 심해짐</option><option>점점 나아짐</option><option>반복적으로 나타남</option><option>잘 모르겠음</option></select></div>
+        <div class="field full"><label for="symptomDetail">증상 설명 및 동반 증상</label><textarea id="symptomDetail" maxlength="1000" placeholder="언제부터 어떤 증상이 있었는지 자유롭게 적어주세요."></textarea></div>
+      </div>
+      <div class="form-section">03 · 과거 건강정보</div>
+      <div class="form-grid">
+        <div class="field full"><label for="medicalHistory">기저질환 및 과거 병력</label><textarea id="medicalHistory" maxlength="800" placeholder="예: 천식, 당뇨병, 과거 수술 이력 / 없으면 '없음'"></textarea></div>
+        <div class="field full"><label for="medications">현재 복용 중인 약물</label><textarea id="medications" maxlength="800" placeholder="약 이름, 복용량 등을 알고 있는 범위에서 입력"></textarea></div>
+        <div class="field full"><label for="allergies">약물·음식 알레르기</label><input id="allergies" maxlength="500" placeholder="없음 / 모름 / 알레르기 내용"></div>
+        <div class="field full"><label for="extraInfo">기타 의료진에게 알릴 사항</label><textarea id="extraInfo" maxlength="800" placeholder="임신 가능성, 보호자 동행 여부 등 필요한 사항"></textarea></div>
+      </div>
+      <label class="consent"><input id="intakeConsent" type="checkbox" required><span>입력한 정보가 선택한 병원에 전달되는 상황을 시연하는 데 동의합니다. 이 데모는 실제 병원 서버와 연결되어 있지 않으며, 입력 내용은 실제 의료진에게 전달되지 않습니다.</span></label>
+      <div class="intake-actions"><button type="button" class="btn" id="cancelIntake">취소</button><button type="submit" class="btn primary">병원에 사전 정보 전달 ↗</button></div>
+    </form>
+  </div>
+</div>
+<div class="modal-backdrop" id="receiverBackdrop">
+  <div class="modal intake-modal" role="dialog" aria-modal="true" aria-labelledby="receiverTitle">
+    <div class="modal-head"><div><div class="modal-title" id="receiverTitle">병원 사전정보 수신함</div><div class="right-caption">HOSPITAL INTAKE CONSOLE · DEMO</div></div><button class="close" id="closeReceiver" aria-label="닫기">×</button></div>
+    <p class="modal-copy">이 브라우저에 저장된 모의 문진 정보입니다. 같은 사이트를 같은 브라우저에서 다시 열어도 확인할 수 있지만, 실제 병원이나 다른 기기로 전송되지는 않습니다.</p>
+    <div class="intake-actions" style="justify-content:space-between;margin:10px 0"><span id="receiverCount" class="receiver-meta">수신 문진 0건</span><button type="button" class="btn" id="clearReceiver">수신함 비우기</button></div>
+    <div id="receiverList"><div class="empty">아직 전달된 사전 문진 정보가 없습니다.</div></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -181,6 +243,108 @@ function locate(){if(!navigator.geolocation){toast("이 브라우저에서는 �
 function showModal(){let h=hospitals.find(x=>x.id===selectedId);if(!h){toast("먼저 병원을 선택해 주세요.");return} $("modalTitle").textContent=h.name;$("modalBody").innerHTML=`<p class="modal-copy">${h.note}. 아래 정보는 화면 시연을 위해 임의로 생성한 데이터이며 실제 병원 정보가 아닙니다.</p><div class="modal-grid"><div class="modal-stat"><small>가상 운영 상태</small><strong style="color:${colorOf(h)}">${statusText(h)}</strong></div><div class="modal-stat"><small>가상 수용 여유도</small><strong>${h.capacity}%</strong></div><div class="modal-stat"><small>예시 병상 수</small><strong>${h.beds}개</strong></div><div class="modal-stat"><small>현재 위치 기준</small><strong>${fmtDistance(distanceKm(userLocation,h))}</strong></div></div><div class="modal-section">기관 정보</div><div class="modal-list">주소: ${h.address}<br>대표 전화(예시): ${h.phone}<br>기관 유형: ${h.type}<br>예상 이동 시간: 약 ${eta(h)}분 (직선거리 기반 단순 추정)</div><div class="modal-section">표시 진료과목 (예시)</div><div class="modal-list">${h.departments.join(" · ")}</div><p class="modal-copy" style="margin-bottom:0">실제 진료 가능 여부, 병상 상황, 진료과 운영 여부는 반드시 해당 의료기관 또는 119를 통해 확인해야 합니다.</p>`;$("modalBackdrop").classList.add("show")}
 function toast(msg){let t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),2600)}
 $("search").addEventListener("input",renderList);$("sort").addEventListener("change",renderList);document.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");activeFilter=b.dataset.filter;renderList()}));$("nearestBtn").addEventListener("click",nearest);$("locateBtn").addEventListener("click",locate);$("routeBtn").addEventListener("click",showRoute);$("infoBtn").addEventListener("click",showModal);$("closeModal").addEventListener("click",()=>$("modalBackdrop").classList.remove("show"));$("modalBackdrop").addEventListener("click",e=>{if(e.target===$("modalBackdrop"))$("modalBackdrop").classList.remove("show")});document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modalBackdrop").classList.remove("show")});
+
+// Patient pre-arrival intake: browser-only demonstration.
+ // The mock inbox uses localStorage so the same browser can show submissions
+ // after reopening the page or in another tab. This is NOT hospital transmission.
+const INTAKE_STORAGE_KEY = "er_signal_demo_intakes_v2";
+let volatileIntakes = [];
+function loadDemoIntakes(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(INTAKE_STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved : volatileIntakes;
+  } catch (err) {
+    return volatileIntakes;
+  }
+}
+let demoIntakes = loadDemoIntakes();
+function saveDemoIntakes(){
+  // Keep the current page usable even when browser storage is blocked.
+  volatileIntakes = [...demoIntakes];
+  try {
+    localStorage.setItem(INTAKE_STORAGE_KEY, JSON.stringify(demoIntakes));
+  } catch (err) {
+    toast("브라우저 저장은 제한됐지만, 현재 화면에서 수신 내용을 표시합니다.");
+  }
+  return true;
+}
+function openIntake(){
+  const select=$("intakeHospital");
+  select.innerHTML=hospitals.map(h=>`<option value="${h.id}" ${h.id===selectedId?"selected":""}>${h.name} · ${h.district}</option>`).join("");
+  $("intakeBackdrop").classList.add("show");
+}
+function closeIntake(){$("intakeBackdrop").classList.remove("show")}
+function openReceiver(){demoIntakes=loadDemoIntakes();renderReceiver();$("receiverBackdrop").classList.add("show")}
+function closeReceiver(){$("receiverBackdrop").classList.remove("show")}
+function safeText(value){return String(value||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function renderReceiver(){
+  const root=$("receiverList");
+  const count=$("receiverCount");
+  if(count) count.textContent=`수신 문진 ${demoIntakes.length}건`;
+  if(!demoIntakes.length){root.innerHTML='<div class="empty">아직 전달된 사전 문진 정보가 없습니다.</div>';return}
+  root.innerHTML=[...demoIntakes].reverse().map(item=>`
+    <article class="receiver-card">
+      <div class="receiver-head"><div><div class="receiver-name">${safeText(item.patientName)} · ${safeText(item.mainSymptom)}</div><div class="receiver-meta">${safeText(item.hospitalName)} · ${safeText(item.sentAt)}</div></div><span class="mini-status received">모의 수신 완료</span></div>
+      <div class="receiver-body">생년월일: ${safeText(item.patientBirth)}
+연락처: ${safeText(item.patientPhone||"미입력")}
+예상 도착: ${safeText(item.arrivalTime)}
+증상 발생: ${safeText(item.symptomStart||"미입력")}
+통증/불편감: ${safeText(item.painLevel)}
+증상 변화: ${safeText(item.symptomChange)}
+증상 설명: ${safeText(item.symptomDetail||"미입력")}
+과거 병력: ${safeText(item.medicalHistory||"미입력")}
+복용 약물: ${safeText(item.medications||"미입력")}
+알레르기: ${safeText(item.allergies||"미입력")}
+기타: ${safeText(item.extraInfo||"미입력")}</div>
+    </article>`).join("");
+}
+$("openIntakeBtn").addEventListener("click",openIntake);
+$("closeIntake").addEventListener("click",closeIntake);
+$("cancelIntake").addEventListener("click",closeIntake);
+$("receiverBtn").addEventListener("click",openReceiver);
+$("clearReceiver").addEventListener("click",()=>{
+  if(!confirm("모의 수신함의 문진 정보를 모두 삭제할까요?"))return;
+  demoIntakes=[];
+  try{localStorage.removeItem(INTAKE_STORAGE_KEY)}catch(err){}
+  renderReceiver();
+  toast("모의 수신함을 비웠습니다.");
+});
+window.addEventListener("storage",e=>{
+  if(e.key===INTAKE_STORAGE_KEY && $("receiverBackdrop").classList.contains("show")){
+    demoIntakes=loadDemoIntakes();
+    renderReceiver();
+  }
+});
+$("closeReceiver").addEventListener("click",closeReceiver);
+$("intakeBackdrop").addEventListener("click",e=>{if(e.target===$("intakeBackdrop"))closeIntake()});
+$("receiverBackdrop").addEventListener("click",e=>{if(e.target===$("receiverBackdrop"))closeReceiver()});
+$("intakeForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  if(!$("intakeForm").reportValidity())return;
+  const hospital=hospitals.find(h=>h.id===+$("intakeHospital").value);
+  const item={
+    hospitalId:hospital.id,hospitalName:hospital.name,
+    patientName:$("patientName").value.trim(),patientBirth:$("patientBirth").value,
+    patientPhone:$("patientPhone").value.trim(),arrivalTime:$("arrivalTime").value,
+    mainSymptom:$("mainSymptom").value.trim(),symptomStart:$("symptomStart").value.trim(),
+    painLevel:$("painLevel").value,symptomChange:$("symptomChange").value,
+    symptomDetail:$("symptomDetail").value.trim(),medicalHistory:$("medicalHistory").value.trim(),
+    medications:$("medications").value.trim(),allergies:$("allergies").value.trim(),
+    extraInfo:$("extraInfo").value.trim(),sentAt:new Intl.DateTimeFormat("ko-KR",{dateStyle:"short",timeStyle:"short"}).format(new Date())
+  };
+  demoIntakes=loadDemoIntakes();
+  demoIntakes.push(item);
+  saveDemoIntakes();
+  $("intakeForm").reset();
+  closeIntake();
+  renderReceiver();
+  $("receiverBackdrop").classList.add("show");
+  toast("모의 수신함에 정보가 표시되었습니다.");
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){closeIntake();closeReceiver()}
+});
+
 $("today").textContent=new Intl.DateTimeFormat("ko-KR",{dateStyle:"full"}).format(new Date());
 initMap();
 </script>
